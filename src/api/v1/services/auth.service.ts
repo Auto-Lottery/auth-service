@@ -22,13 +22,10 @@ export class AuthService {
   > {
     try {
       const res = checkPhonenumber(phoneNumber);
-
       if (res.code === 500) {
         return res;
       }
-
       const pn = res.data.phoneNumber;
-
       // huuchin code uussen esehiig shalgana
       const oldOtp = await redisClient.get(pn);
       if (oldOtp) {
@@ -41,7 +38,6 @@ export class AuthService {
           }
         };
       }
-
       // Shineer code uusgene
       const otp = generateOTP(4, OTP_DURATION);
       redisClient.set(pn, otp);
@@ -55,7 +51,7 @@ export class AuthService {
         }
       };
     } catch (err) {
-      console.log("SENDCODE ERR::: ", err);
+      console.log("SEND OTP CODE ERR::: ", err);
       throw new Error("INTERNAL SERVER ERROR");
     }
   }
