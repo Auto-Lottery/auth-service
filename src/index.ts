@@ -4,6 +4,7 @@ import V1Routes from "./api/v1/routes/routes";
 import { connectDb } from "./api/v1/config/mongodb";
 import { connectRedis } from "./api/v1/config/redis";
 import { PORT } from "./api/v1/config";
+import { infoLog } from "./api/v1/utilities/log";
 
 const app = express();
 app.use(express.json());
@@ -21,7 +22,7 @@ app.use("/v1", V1Routes);
 
 const port: number = PORT;
 app.listen(port, async () => {
-  console.log(`Started server on ${port} port`);
+  infoLog(`Started server on ${port} port`);
   connectDb();
   connectRedis();
 });

@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ACCESS_TOKEN_SECRET } from "../config";
 import { User } from "../types/user";
+import { errorLog } from "../utilities/log";
 export class TokenService {
   constructor() {}
 
@@ -21,7 +22,7 @@ export class TokenService {
 
     try {
       const tokenData = jwt.verify(accessToken, ACCESS_TOKEN_SECRET);
-      console.log("TOKEN DATA::: ", tokenData);
+      errorLog("TOKEN DATA::: ", tokenData);
       req.user = tokenData as User;
       next();
     } catch (err) {
