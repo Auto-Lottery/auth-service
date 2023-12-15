@@ -1,5 +1,6 @@
 import vault from "node-vault";
 import { VAULT_TOKEN, VAULT_URL } from "../config";
+import { errorLog } from "../utilities/log";
 
 class VaultManager {
   private static instance: VaultManager;
@@ -34,7 +35,7 @@ class VaultManager {
 
   public async write(
     path: string,
-    data: Record<string, Record<string, string>>
+    data: Record<string, string>
   ): Promise<Record<string, string>> {
     // path example -> secret/data/{key} || kv/data/{key}
     try {

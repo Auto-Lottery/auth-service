@@ -90,14 +90,18 @@ export class AuthService {
         const res = await this.register(pn);
         if (res.code === 200) {
           userData = res.data;
+        } else {
+          return res as CustomResponseError;
         }
-        return res as CustomResponseError;
+      } else {
+        userData = foundUser.toObject();
       }
 
-      userData = foundUser?.toJSON();
-
       //token eneter uusgene
-      const accessToken = await this.tokenService.getAccessToken(userData);
+      const accessToken = await this.tokenService.getAccessToken({
+        ...userData,
+        _id: userData._id.toString()
+      });
 
       if (!accessToken) {
         return {
@@ -160,12 +164,13 @@ export class AuthService {
         publicKeyEncoding: { type: "spki", format: "pem" },
         privateKeyEncoding: { type: "pkcs8", format: "pem" }
       });
-      // ene hesgiig queue-ruu hiine
       await this.vaultManager.write(`secret/data/${userId}`, {
-        data: { publicKey, privateKey }
+        publicKey,
+        privateKey
       });
     } catch (err) {
       errorLog("CREATE USER KEYS ERR::: ", err);
+      // User secret uusehgui bh ersdelees sergiileed UserModel deer hadgalah
       throw Error("INTERNAL SERVER ERROR");
     }
   }

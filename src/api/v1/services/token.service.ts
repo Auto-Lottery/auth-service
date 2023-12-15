@@ -1,17 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { ACCESS_TOKEN_SECRET } from "../config";
 import { User } from "../types/user";
-import { errorLog } from "../utilities/log";
+import VaultManager from "./vault-manager";
 export class TokenService {
   constructor() {}
 
-  public static verifyAccessToken(
+  public static async verifyAccessToken(
     req: Request,
     res: Response,
     next: NextFunction
   ) {
-    const bearerToken = req.headers?.["authorization"];
+    const bearerToken = req.headers?.authorization;
     if (!bearerToken) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -21,8 +20,9 @@ export class TokenService {
     }
 
     try {
-      const tokenData = jwt.verify(accessToken, ACCESS_TOKEN_SECRET);
-      errorLog("TOKEN DATA::: ", tokenData);
+      const vaultManager = VaultManager.getInstance();
+      const accessSecret = await vaultManager.read("secret/data/accessSecret");
+      const tokenData = jwt.verify(accessToken, accessSecret.publicKey);
       req.user = tokenData as User;
       next();
     } catch (err) {
@@ -30,22 +30,15 @@ export class TokenService {
     }
   }
 
-  getAccessToken(data: User): Promise<string | undefined> {
-    return new Promise((resolve, reject) => {
-      jwt.sign(
-        data,
-        ACCESS_TOKEN_SECRET,
-        {
-          expiresIn: "1h"
-        },
-        (err, token) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(token);
-          }
-        }
-      );
+  async getAccessToken(data: User): Promise<string | undefined> {
+    const vaultManager = VaultManager.getInstance();
+    const accessSecret = await vaultManager.read("secret/data/accessSecret");
+    const token = jwt.sign(data, accessSecret.privateKey, {
+      algorithm: "RS256",
+      expiresIn: "8h",
+      audience: data._id,
+      issuer: "khishigee.mn"
     });
+    return token;
   }
 }

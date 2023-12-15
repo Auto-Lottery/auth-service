@@ -1,5 +1,6 @@
 import express from "express";
 import { AuthService } from "../services/auth.service";
+import { TokenService } from "../services/token.service";
 const authRoutes = express.Router();
 
 authRoutes.post("/sendOTPCode", async (req, res) => {
@@ -30,6 +31,13 @@ authRoutes.post("/register", async (req, res) => {
   } catch (err) {
     res.status(500).json(err);
   }
+});
+
+authRoutes.get("/verifyToken", TokenService.verifyAccessToken, (req, res) => {
+  if (req?.user) {
+    return res.send(req.user);
+  }
+  return res.status(401).json({ message: "Unauthorized" });
 });
 
 export default authRoutes;
