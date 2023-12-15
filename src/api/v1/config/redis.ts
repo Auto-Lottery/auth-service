@@ -1,22 +1,16 @@
-import { createClient } from "redis";
-import { getVaultData } from "./vault";
+import { RedisManager } from "../services/redis-manager";
+import VaultManager from "../services/vault-manager";
 
-let redisClient: ReturnType<typeof createClient>;
+const redisManager = RedisManager.getInstance();
 
-const connectRedis = async () => {
+export const connectRedis = async () => {
   try {
-    const configData = await getVaultData("kv/data/redis");
-    redisClient = createClient({
-      url: configData.REDIS_URI
-    });
-
-    await redisClient.connect();
-
-    redisClient.on("error", (err) => console.log("Redis Client Error", err));
-    console.log("Redis connected");
+    const vaultManager = VaultManager.getInstance();
+    const configData = await vaultManager.read("kv/data/redis");
+    redisManager.connect(configData.REDIS_URI);
   } catch (err) {
+    await redisManager.disconnect();
+    console.log("REDIS CONNECT ERR::: ", err);
     return new Error("Cannot connect redis");
   }
 };
-
-export { redisClient, connectRedis };

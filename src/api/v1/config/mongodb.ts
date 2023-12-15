@@ -1,20 +1,23 @@
 import mongoose from "mongoose";
-import { getVaultData } from "./vault";
+import VaultManager from "../services/vault-manager";
 
 export const connectDb = async () => {
   try {
-    const configData = await getVaultData("kv/data/mongodb");
-    const connection = await mongoose.connect(configData.MONGO_URL, {
+    const vaultManager = VaultManager.getInstance();
+    const config = await vaultManager.read("kv/data/mongodb");
+    await mongoose.connect(config.MONGO_URL, {
       serverApi: {
         version: "1",
         strict: true,
         deprecationErrors: true
       }
     });
-    console.log("MongoDB connected.");
-    return connection;
   } catch (err) {
     console.log(err);
-    return new Error("Өгөгдлийн сантай холбогдоход алдаа гарлаа");
+    throw new Error("Өгөгдлийн сантай холбогдоход алдаа гарлаа");
   }
 };
+
+mongoose.connection.on("connected", async () => {
+  console.log("MongoDB connected.");
+});
