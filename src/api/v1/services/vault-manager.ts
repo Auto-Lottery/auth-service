@@ -27,7 +27,7 @@ class VaultManager {
       const res = await this.vaultClient.read(path);
       return res.data.data;
     } catch (error) {
-      console.log("VAULT READ ERROR::: ", error);
+      errorLog("VAULT READ ERROR::: ", error);
       throw new Error("INTERNAL SERVER ERROR");
     }
   }
@@ -43,7 +43,7 @@ class VaultManager {
       });
       return res.data.data;
     } catch (error) {
-      console.log("VAULT WRITE ERROR::: ", error);
+      errorLog("VAULT WRITE ERROR::: ", error);
       throw new Error("INTERNAL SERVER ERROR");
     }
   }

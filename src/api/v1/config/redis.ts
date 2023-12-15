@@ -1,5 +1,6 @@
 import { RedisManager } from "../services/redis-manager";
 import VaultManager from "../services/vault-manager";
+import { errorLog } from "../utilities/log";
 
 const redisManager = RedisManager.getInstance();
 
@@ -10,7 +11,7 @@ export const connectRedis = async () => {
     redisManager.connect(configData.REDIS_URI);
   } catch (err) {
     await redisManager.disconnect();
-    console.log("REDIS CONNECT ERR::: ", err);
+    errorLog("REDIS CONNECT ERR::: ", err);
     return new Error("Cannot connect redis");
   }
 };

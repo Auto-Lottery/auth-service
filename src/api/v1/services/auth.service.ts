@@ -7,6 +7,7 @@ import { checkPhonenumber, generateOTP } from "../utilities";
 import { TokenService } from "./token.service";
 import { RedisManager } from "./redis-manager";
 import VaultManager from "./vault-manager";
+import { errorLog } from "../utilities/log";
 
 export class AuthService {
   private tokenService;
@@ -55,7 +56,7 @@ export class AuthService {
         }
       };
     } catch (err) {
-      console.log("SEND OTP CODE ERR::: ", err);
+      errorLog("SEND OTP CODE ERR::: ", err);
       throw new Error("INTERNAL SERVER ERROR");
     }
   }
@@ -113,7 +114,7 @@ export class AuthService {
         }
       };
     } catch (err) {
-      console.log("LOGIN ERR::: ", err);
+      errorLog("LOGIN ERR::: ", err);
       throw new Error("INTERNAL SERVER ERROR");
     }
   }
@@ -147,7 +148,7 @@ export class AuthService {
         data: user.toJSON()
       };
     } catch (err) {
-      console.log("REGISTER ERR::: ", err);
+      errorLog("REGISTER ERR::: ", err);
       throw new Error("INTERNAL SERVER ERROR");
     }
   }
@@ -164,7 +165,7 @@ export class AuthService {
         data: { publicKey, privateKey }
       });
     } catch (err) {
-      console.log("CREATE USER KEYS ERR::: ", err);
+      errorLog("CREATE USER KEYS ERR::: ", err);
       throw Error("INTERNAL SERVER ERROR");
     }
   }
