@@ -8,6 +8,8 @@ import { TokenService } from "./token.service";
 import { RedisManager } from "./redis-manager";
 import VaultManager from "./vault-manager";
 import { errorLog } from "../utilities/log";
+import mongoose from "mongoose";
+import { transactional } from "../config/mongodb";
 
 export class AuthService {
   private tokenService;
@@ -142,14 +144,30 @@ export class AuthService {
         };
       }
 
-      const newUser = new UserModel(res.data);
+      const session = await mongoose.startSession();
+      const createdUser = await transactional<User>(session, async () => {
+        const newUser = new UserModel(res.data);
 
-      const user = await newUser.save();
+        const user = await newUser.save({
+          session
+        });
 
-      await this.createUserPemKeys(user._id.toString());
+        await this.createUserPemKeys(user._id.toString());
+
+        return user.toJSON();
+      });
+      await session.endSession();
+
+      if (createdUser === null) {
+        return {
+          code: 500,
+          message: "Бүртгэл үүсгэхэд алдаа гарлаа."
+        };
+      }
+
       return {
         code: 200,
-        data: user.toJSON()
+        data: createdUser
       };
     } catch (err) {
       errorLog("REGISTER ERR::: ", err);
@@ -164,13 +182,16 @@ export class AuthService {
         publicKeyEncoding: { type: "spki", format: "pem" },
         privateKeyEncoding: { type: "pkcs8", format: "pem" }
       });
-      await this.vaultManager.write(`secret/data/${userId}`, {
-        publicKey,
-        privateKey
-      });
+      if (publicKey && privateKey) {
+        await this.vaultManager.write(`secret/data/${userId}`, {
+          publicKey,
+          privateKey
+        });
+      } else {
+        throw Error("Хэрэглэгчийн нууц түлхүүр үүсгэхэд алдаа гарлаа");
+      }
     } catch (err) {
       errorLog("CREATE USER KEYS ERR::: ", err);
-      // User secret uusehgui bh ersdelees sergiileed UserModel deer hadgalah
       throw Error("INTERNAL SERVER ERROR");
     }
   }

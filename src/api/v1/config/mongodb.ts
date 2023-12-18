@@ -24,3 +24,20 @@ export const connectDb = async () => {
 mongoose.connection.on("connected", async () => {
   infoLog("MongoDB connected.");
 });
+
+export const transactional = async <T>(
+  session: mongoose.mongo.ClientSession,
+  callback: () => Promise<T>
+): Promise<T | null> => {
+  await session.startTransaction();
+  let res: T | null = null;
+  try {
+    res = await callback();
+    await session.commitTransaction();
+  } catch (err) {
+    console.log("Aldaa garaad l ", err);
+    await session.abortTransaction();
+  }
+
+  return res;
+};
