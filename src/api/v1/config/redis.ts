@@ -10,7 +10,7 @@ export const connectRedis = async () => {
     const vaultManager = VaultManager.getInstance();
     const configKey = isDev ? "kv/data/redisDev" : "kv/data/redis";
     const configData = await vaultManager.read(configKey);
-    redisManager.connect(configData.REDIS_URI);
+    redisManager.connect(configData.REDIS_URI, configData.REDIS_PASSWORD);
   } catch (err) {
     await redisManager.disconnect();
     errorLog("REDIS CONNECT ERR::: ", err);

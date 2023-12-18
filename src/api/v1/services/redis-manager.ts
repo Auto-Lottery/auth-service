@@ -18,9 +18,10 @@ export class RedisManager {
     return this.client;
   }
 
-  public async connect(url: string): Promise<void> {
+  public async connect(url: string, password: string): Promise<void> {
     this.client = createClient({
-      url
+      url,
+      password
     });
     
     this.client.connect();
