@@ -1,4 +1,5 @@
 import { totp } from "otplib";
+import bcrypt from "bcrypt";
 import { OTP_DURATION, OTP_SECRET } from "../config";
 import { MobileOperator } from "../types/enums";
 import { CustomResponse } from "../types/custom-response";
@@ -17,6 +18,12 @@ export const generateOTP = (length: number, duration?: number): string => {
   };
 
   return totp.generate(OTP_SECRET);
+};
+
+export const hashPassword = async (password: string) => {
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+  return hashedPassword;
 };
 
 export const getMobileOperator = (phoneNumber: string) => {

@@ -1,15 +1,22 @@
 import { generateKeyPairSync } from "crypto";
+import bcrypt from "bcrypt";
 import { OTP_DURATION } from "../config";
 import UserModel from "../models/user.model";
 import { CustomResponse, CustomResponseError } from "../types/custom-response";
-import { LoginData, User, UserWithToken } from "../types/user";
-import { checkPhonenumber, generateOTP } from "../utilities";
+import {
+  AdminUserWithToken,
+  LoginData,
+  User,
+  UserWithToken
+} from "../types/user";
+import { checkPhonenumber, generateOTP, hashPassword } from "../utilities";
 import { TokenService } from "./token.service";
 import { RedisManager } from "./redis-manager";
 import VaultManager from "./vault-manager";
 import { errorLog } from "../utilities/log";
 import mongoose from "mongoose";
 import { transactional } from "../config/mongodb";
+import AdminUserModel from "../models/admin-user.model";
 
 export class AuthService {
   private tokenService;
@@ -116,7 +123,7 @@ export class AuthService {
         code: 200,
         data: {
           ...userData,
-          accessToken
+          accessToken: accessToken.token
         }
       };
     } catch (err) {
@@ -194,5 +201,98 @@ export class AuthService {
       errorLog("CREATE USER KEYS ERR::: ", err);
       throw Error("INTERNAL SERVER ERROR");
     }
+  }
+
+  async registerAdmin({
+    phoneNumber,
+    password,
+    role
+  }: {
+    phoneNumber: string;
+    password: string;
+    role?: string;
+  }) {
+    const res = checkPhonenumber(phoneNumber);
+
+    if (res.code === 500) {
+      return res;
+    }
+
+    const foundUser = await AdminUserModel.findOne({
+      phoneNumber: phoneNumber
+    });
+
+    if (foundUser) {
+      return {
+        code: 500,
+        message: "Дугаар бүртгэлтэй байна."
+      };
+    }
+    console.log(res)
+    const hp = await hashPassword(password);
+    await AdminUserModel.create({
+      ...res.data,
+      password: hp,
+      role: [role || "supervisor"]
+    });
+
+    return {
+      code: 200,
+      data: true
+    };
+  }
+
+  async loginAdmin({
+    phoneNumber,
+    password
+  }: {
+    phoneNumber: string;
+    password: string;
+  }): Promise<CustomResponse<AdminUserWithToken>> {
+    const res = checkPhonenumber(phoneNumber);
+
+    if (res.code === 500) {
+      return res;
+    }
+
+    const foundUser = await AdminUserModel.findOne({
+      phoneNumber: phoneNumber
+    });
+
+    if (!foundUser) {
+      return {
+        code: 500,
+        message: "Бүртгэлгүй байна"
+      };
+    }
+
+    const validate = await bcrypt.compare(password, foundUser.password);
+
+    if (!validate) {
+      return {
+        code: 500,
+        message: "Нууц үг буруу байна!"
+      };
+    }
+
+    const accessToken = await this.tokenService.getAccessToken({
+      ...foundUser,
+      _id: foundUser._id.toString()
+    });
+
+    return {
+      code: 200,
+      data: {
+        _id: foundUser._id.toString(),
+        operator: foundUser.operator,
+        phoneNumber: foundUser.phoneNumber,
+        roles: foundUser.roles,
+        token: accessToken.token,
+        exp:
+          typeof accessToken.tokenData !== "string"
+            ? accessToken.tokenData?.exp
+            : undefined
+      }
+    };
   }
 }
