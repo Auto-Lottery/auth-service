@@ -228,7 +228,7 @@ export class AuthService {
         message: "Дугаар бүртгэлтэй байна."
       };
     }
-    console.log(res)
+
     const hp = await hashPassword(password);
     await AdminUserModel.create({
       ...res.data,

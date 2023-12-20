@@ -35,7 +35,7 @@ export const transactional = async <T>(
     res = await callback();
     await session.commitTransaction();
   } catch (err) {
-    console.log("Aldaa garaad l ", err);
+    errorLog("Transactional using error");
     await session.abortTransaction();
   }
 

@@ -2,6 +2,8 @@ import express from "express";
 import { AuthService } from "../services/auth.service";
 import { TokenService } from "../services/token.service";
 import { AdminUser } from "../types/user";
+import { UserService } from "../services/user.service";
+import { errorLog } from "../utilities/log";
 
 const adminAuthRoutes = express.Router();
 
@@ -35,5 +37,42 @@ adminAuthRoutes.post("/login", async (req, res) => {
     res.status(500).json(err);
   }
 });
+
+adminAuthRoutes.get(
+  "/verifyToken",
+  TokenService.verifyAdminAccessToken,
+  (req, res) => {
+    if (req?.user) {
+      return res.send(req.user);
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+);
+
+adminAuthRoutes.get(
+  "/users",
+  TokenService.verifyAdminAccessToken,
+  async (req, res) => {
+    const { page, pageSize, sortBy } = req.query;
+    if (req?.user) {
+      try {
+        const userService = new UserService();
+        const userList = await userService.getUserList(
+          Number(page || 1),
+          Number(pageSize || 10),
+          sortBy as string
+        );
+        return res.status(200).json({
+          code: 200,
+          data: userList
+        });
+      } catch (err) {
+        errorLog("GET USER LIST::: ", err);
+        return res.status(500).json(err);
+      }
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+);
 
 export default adminAuthRoutes;
