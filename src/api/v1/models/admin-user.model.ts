@@ -35,8 +35,9 @@ const AdminUserSchema = new Schema(
       }
     },
     createdDate: {
-      type: Date,
-      default: Date.now
+      type: Number,
+      default: Date.now,
+      index: -1
     }
   },
   {
