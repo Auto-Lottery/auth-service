@@ -2,6 +2,7 @@ import UserModel from "../models/user.model";
 import { CustomResponse } from "../types/custom-response";
 import { User } from "../types/user";
 import { errorLog } from "../utilities/log";
+import { Filter, generateQuery } from "../utilities/mongo";
 
 export class UserService {
   constructor() {}
@@ -31,20 +32,29 @@ export class UserService {
     }
   }
 
-  async getUserList(page: number, pageSize: number, sortBy?: string) {
+  async getUserList(filter: Filter) {
+    const { field, order } = filter?.sort || {
+      field: "_id",
+      order: "desc"
+    };
+    const { page, pageSize } = filter?.pagination || {
+      page: 1,
+      pageSize: 10
+    };
     try {
       const skip = (page - 1) * pageSize;
-      const users = await UserModel.find()
+      const query = generateQuery(filter?.conditions || []);
+
+      const users = await UserModel.find(query)
         .skip(skip)
         .limit(pageSize)
         .sort({
-          [sortBy || "_id"]: -1
-        })
-        .exec();
-      const total = await UserModel.countDocuments();
+          [field]: order === "desc" ? -1 : 1
+        });
+      const count = await UserModel.countDocuments(query);
       return {
         userList: users,
-        total
+        total: count
       };
     } catch (error) {
       errorLog("User list fetch error ", error);

@@ -21,7 +21,7 @@ export class TokenService {
 
     try {
       const vaultManager = VaultManager.getInstance();
-      const accessSecret = await vaultManager.read("secret/data/accessSecret");
+      const accessSecret = await vaultManager.read("kv/data/accessSecret");
       const tokenData = jwt.verify(accessToken, accessSecret.publicKey);
       req.user = tokenData as User;
       next();
@@ -46,7 +46,7 @@ export class TokenService {
 
     try {
       const vaultManager = VaultManager.getInstance();
-      const accessSecret = await vaultManager.read("secret/data/accessSecret");
+      const accessSecret = await vaultManager.read("kv/data/accessSecret");
       const tokenData = jwt.verify(accessToken, accessSecret.publicKey);
       req.user = tokenData as AdminUser;
       next();
@@ -59,7 +59,7 @@ export class TokenService {
     data: User | AdminUser
   ): Promise<{ token: string; tokenData: JwtPayload | string }> {
     const vaultManager = VaultManager.getInstance();
-    const accessSecret = await vaultManager.read("secret/data/accessSecret");
+    const accessSecret = await vaultManager.read("kv/data/accessSecret");
     const token = jwt.sign(data, accessSecret.privateKey, {
       algorithm: "RS256",
       expiresIn: "8h",

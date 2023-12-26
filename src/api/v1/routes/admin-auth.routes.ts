@@ -50,22 +50,19 @@ adminAuthRoutes.get(
   }
 );
 
-adminAuthRoutes.get(
+adminAuthRoutes.post(
   "/users",
   TokenService.verifyAdminAccessToken,
   async (req, res) => {
-    const { page, pageSize, sortBy } = req.query;
+    const filter = req.body;
     if (req?.user) {
       try {
         const userService = new UserService();
-        const userList = await userService.getUserList(
-          Number(page || 1),
-          Number(pageSize || 10),
-          sortBy as string
-        );
+        const userRes = await userService.getUserList(filter);
+
         return res.status(200).json({
           code: 200,
-          data: userList
+          data: userRes
         });
       } catch (err) {
         errorLog("GET USER LIST::: ", err);
@@ -95,4 +92,20 @@ adminAuthRoutes.get(
   }
 );
 
+adminAuthRoutes.post(
+  "/bulkRegisterUsers",
+  TokenService.verifyAdminAccessToken,
+  async (req, res) => {
+    const { phoneNumberList } = req.body;
+    const authService = new AuthService();
+    const registerRequests = phoneNumberList.map((pn: string) => {
+      authService.register(pn);
+    });
+    const registeredUsers = await Promise.all(registerRequests);
+    return res.send({
+      code: 200,
+      data: registeredUsers
+    });
+  }
+);
 export default adminAuthRoutes;
