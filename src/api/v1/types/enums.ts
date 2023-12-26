@@ -5,5 +5,6 @@ export enum MobileOperator {
   UNITEL = "UNITEL",
   GMOBILE = "GMOBILE",
   ONDO = "ONDO",
+  SYSTEM = "SYSTEM",
   UNKNOWN = "UNKNOWN"
 }

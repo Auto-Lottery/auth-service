@@ -18,10 +18,18 @@ const UserSchema = new Schema(
           MobileOperator.UNITEL,
           MobileOperator.SKYTEL,
           MobileOperator.GMOBILE,
+          MobileOperator.SYSTEM,
           MobileOperator.ONDO,
           MobileOperator.UNKNOWN
         ]
       }
+    },
+    usingPassword: {
+      type: Boolean,
+      default: false
+    },
+    password: {
+      type: String
     },
     createdDate: {
       type: Number,
@@ -30,7 +38,17 @@ const UserSchema = new Schema(
     }
   },
   {
-    versionKey: false
+    versionKey: false,
+    toJSON: {
+      virtuals: false
+    },
+    virtuals: {
+      _id: {
+        get() {
+          return this._id.toString();
+        }
+      }
+    }
   }
 );
 

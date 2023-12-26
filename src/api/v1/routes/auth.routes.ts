@@ -23,6 +23,20 @@ authRoutes.post("/login", async (req, res) => {
   }
 });
 
+authRoutes.post(
+  "/createPassword",
+  TokenService.verifyAccessToken,
+  async (req, res) => {
+    try {
+      const authService = new AuthService();
+      const response = await authService.createPassword(req.body);
+      res.send(response);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  }
+);
+
 authRoutes.post("/register", async (req, res) => {
   try {
     const authService = new AuthService();

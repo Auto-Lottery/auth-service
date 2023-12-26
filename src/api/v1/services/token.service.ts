@@ -56,7 +56,7 @@ export class TokenService {
   }
 
   async getAccessToken(
-    data: User
+    data: User | AdminUser
   ): Promise<{ token: string; tokenData: JwtPayload | string }> {
     const vaultManager = VaultManager.getInstance();
     const accessSecret = await vaultManager.read("secret/data/accessSecret");

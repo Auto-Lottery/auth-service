@@ -23,6 +23,7 @@ const AdminUserSchema = new Schema(
           MobileOperator.SKYTEL,
           MobileOperator.GMOBILE,
           MobileOperator.ONDO,
+          MobileOperator.SYSTEM,
           MobileOperator.UNKNOWN
         ]
       }

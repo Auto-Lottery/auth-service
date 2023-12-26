@@ -55,6 +55,8 @@ export const getMobileOperator = (phoneNumber: string) => {
     case "66":
     case "60":
       return MobileOperator.ONDO;
+    case "10":
+      return MobileOperator.SYSTEM;
     default:
       return MobileOperator.UNKNOWN;
   }

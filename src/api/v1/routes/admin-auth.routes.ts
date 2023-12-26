@@ -23,6 +23,7 @@ adminAuthRoutes.post(
       const response = await authService.registerAdmin(req.body);
       res.send(response);
     } catch (err) {
+      errorLog("Admin register err::: ", err);
       res.status(500).json(err);
     }
   }
@@ -68,6 +69,25 @@ adminAuthRoutes.get(
         });
       } catch (err) {
         errorLog("GET USER LIST::: ", err);
+        return res.status(500).json(err);
+      }
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+);
+
+adminAuthRoutes.get(
+  "/allUsers",
+  TokenService.verifyAdminAccessToken,
+  async (req, res) => {
+    const { operator } = req.query;
+    if (req?.user) {
+      try {
+        const userService = new UserService();
+        const userList = await userService.getAllUsers(operator as string);
+        return res.send(userList);
+      } catch (err) {
+        errorLog("GET ALL USER LIST::: ", err);
         return res.status(500).json(err);
       }
     }

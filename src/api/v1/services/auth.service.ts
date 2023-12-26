@@ -4,6 +4,7 @@ import { OTP_DURATION } from "../config";
 import UserModel from "../models/user.model";
 import { CustomResponse, CustomResponseError } from "../types/custom-response";
 import {
+  AdminUser,
   AdminUserWithToken,
   LoginData,
   User,
@@ -72,7 +73,7 @@ export class AuthService {
 
   async login({
     phoneNumber,
-    otpCode
+    password
   }: LoginData): Promise<CustomResponse<UserWithToken>> {
     try {
       const res = checkPhonenumber(phoneNumber);
@@ -81,8 +82,51 @@ export class AuthService {
         return res;
       }
       const pn = res.data.phoneNumber;
+
+      // Nuuts ugeer newtreh uyd ajillana
+      const foundPasswordHasUser = await UserModel.findOne({
+        phoneNumber: pn,
+        usingPassword: true
+      });
+      if (foundPasswordHasUser && foundPasswordHasUser?.password) {
+        const validate = await bcrypt.compare(
+          password,
+          foundPasswordHasUser.password
+        );
+
+        if (!validate) {
+          return {
+            code: 500,
+            message: "Нууц үг буруу байна!"
+          };
+        }
+        const pHasUser = {
+          phoneNumber: foundPasswordHasUser.phoneNumber,
+          operator: foundPasswordHasUser.operator,
+          createdDate: foundPasswordHasUser.createdDate,
+          _id: foundPasswordHasUser._id.toString()
+        } as User;
+        const accessToken = await this.tokenService.getAccessToken(pHasUser);
+
+        if (!accessToken) {
+          return {
+            code: 500,
+            message: "Нэвтрэхэд алдаа гарлаа"
+          };
+        }
+
+        return {
+          code: 200,
+          data: {
+            ...pHasUser,
+            accessToken: accessToken.token
+          }
+        };
+      }
+
+      // OTP code-r newtreh uyd ajillana
       const otp = await this.redisManager.getClient()?.get(pn);
-      if (!otp || otp !== otpCode) {
+      if (!otp || otp !== password) {
         return {
           code: 500,
           message: "Нэг удаагийн код буруу байна."
@@ -182,6 +226,51 @@ export class AuthService {
     }
   }
 
+  async createPassword({
+    phoneNumber,
+    password,
+    confirmPassword
+  }: {
+    phoneNumber: string;
+    password: string;
+    confirmPassword: string;
+  }) {
+    if (password !== confirmPassword) {
+      return {
+        code: 500,
+        message: "Таны баталгаажуулах нууц үг тохирохгүй байна"
+      };
+    }
+    const hp = await hashPassword(password);
+    const user = await UserModel.updateOne(
+      {
+        phoneNumber: phoneNumber
+      },
+      {
+        $set: {
+          usingPassword: true,
+          password: hp
+        }
+      }
+    );
+    if (user.matchedCount === 0) {
+      return {
+        code: 500,
+        message: `${phoneNumber} хэрэглэгч олдсонгүй`
+      };
+    }
+    if (user.matchedCount === 1 && user.modifiedCount === 1) {
+      return {
+        code: 200,
+        data: true
+      };
+    }
+    return {
+      code: 200,
+      data: false
+    };
+  }
+
   async createUserPemKeys(userId: string) {
     try {
       const { publicKey, privateKey } = generateKeyPairSync("rsa", {
@@ -276,9 +365,12 @@ export class AuthService {
     }
 
     const accessToken = await this.tokenService.getAccessToken({
-      ...foundUser,
+      operator: foundUser.operator,
+      phoneNumber: foundUser.phoneNumber,
+      roles: foundUser.roles,
+      createdDate: foundUser.createdDate,
       _id: foundUser._id.toString()
-    });
+    } as AdminUser);
 
     return {
       code: 200,
