@@ -4,6 +4,7 @@ import { TokenService } from "../services/token.service";
 import { AdminUser } from "../types/user";
 import { UserService } from "../services/user.service";
 import { errorLog } from "../utilities/log";
+import { AdminService } from "../services/admin.service";
 
 const adminAuthRoutes = express.Router();
 
@@ -97,14 +98,13 @@ adminAuthRoutes.post(
   TokenService.verifyAdminAccessToken,
   async (req, res) => {
     const { phoneNumberList } = req.body;
-    const authService = new AuthService();
-    const registerRequests = phoneNumberList.map((pn: string) => {
-      authService.register(pn);
+    const adminService = new AdminService();
+    phoneNumberList.map((pn: string) => {
+      adminService.registerRequestSentToQueue(pn);
     });
-    const registeredUsers = await Promise.all(registerRequests);
     return res.send({
       code: 200,
-      data: registeredUsers
+      data: true
     });
   }
 );
