@@ -7,6 +7,7 @@ import { PORT } from "./api/v1/config";
 import { infoLog } from "./api/v1/utilities/log";
 import VaultManager from "./api/v1/services/vault-manager";
 import { SystemUser } from "./api/v1/services/system-user";
+import { connectQueue } from "./api/v1/config/rabbitmq";
 
 const app = express();
 app.use(express.json());
@@ -25,8 +26,9 @@ app.use("/v1", V1Routes);
 const port: number = PORT;
 app.listen(port, async () => {
   infoLog(`Started server on ${port} port`);
-  connectDb();
-  connectRedis();
+  await connectDb();
+  await connectRedis();
+  await connectQueue();
   const vaultManager = VaultManager.getInstance();
   const authUser = await vaultManager.read("kv/data/authSystemUser");
   SystemUser.login(authUser);
