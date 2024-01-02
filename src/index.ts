@@ -8,6 +8,7 @@ import { infoLog } from "./api/v1/utilities/log";
 import VaultManager from "./api/v1/services/vault-manager";
 import { SystemUser } from "./api/v1/services/system-user";
 import { connectQueue } from "./api/v1/config/rabbitmq";
+import { AdminService } from "./api/v1/services/admin.service";
 
 const app = express();
 app.use(express.json());
@@ -29,6 +30,8 @@ app.listen(port, async () => {
   await connectDb();
   await connectRedis();
   await connectQueue();
+  const adminService = new AdminService();
+  adminService.registerUserFromQueue();
   const vaultManager = VaultManager.getInstance();
   const authUser = await vaultManager.read("kv/data/authSystemUser");
   SystemUser.login(authUser);

@@ -1,27 +1,37 @@
 import UserModel from "../models/user.model";
 import { CustomResponse } from "../types/custom-response";
-import { User } from "../types/user";
 import { errorLog } from "../utilities/log";
 import { Filter, generateQuery } from "../utilities/mongo";
 
 export class UserService {
   constructor() {}
 
-  async getAllUsers(operator?: string): Promise<CustomResponse<User[]>> {
+  async getAllUsersPhoneNumber(
+    page: number = 1,
+    pageSize: number = 100,
+    operator?: string
+  ): Promise<CustomResponse<{ total: number; phoneNumberList: string[] }>> {
     try {
+      const skip = (page - 1) * pageSize;
+      let filter = {};
       if (operator) {
-        const users = await UserModel.find({
-          operator: operator
-        });
-        return {
-          code: 200,
-          data: users.map((item) => item.toJSON({ virtuals: true }))
+        filter = {
+          operator
         };
       }
-      const users = await UserModel.find();
+      const users = await UserModel.find(filter, "phoneNumber")
+        .skip(skip)
+        .limit(pageSize)
+        .sort({
+          _id: -1
+        });
+      const total = await UserModel.countDocuments(filter);
       return {
         code: 200,
-        data: users.map((item) => item.toJSON({ virtuals: true }))
+        data: {
+          phoneNumberList: users.map((item) => item.phoneNumber),
+          total
+        }
       };
     } catch (err) {
       errorLog("Get all users err::: ", err);

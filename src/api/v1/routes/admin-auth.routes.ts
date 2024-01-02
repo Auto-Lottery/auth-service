@@ -75,15 +75,19 @@ adminAuthRoutes.post(
 );
 
 adminAuthRoutes.get(
-  "/allUsers",
+  "/allUsersPhoneNumber",
   TokenService.verifyAdminAccessToken,
   async (req, res) => {
-    const { operator } = req.query;
+    const { page, pageSize, operator } = req.query;
     if (req?.user) {
       try {
         const userService = new UserService();
-        const userList = await userService.getAllUsers(operator as string);
-        return res.send(userList);
+        const usersData = await userService.getAllUsersPhoneNumber(
+          (page || 1) as number,
+          (pageSize || 100) as number,
+          operator as string
+        );
+        return res.send(usersData);
       } catch (err) {
         errorLog("GET ALL USER LIST::: ", err);
         return res.status(500).json(err);

@@ -31,7 +31,7 @@ export class AdminService {
 
   async registerUserFromQueue() {
     const exchangeName = "users";
-    const queueName = "regsiter";
+    const queueName = "register";
     const routingKey = "bulk";
     const rabbitMqManager = RabbitMQManager.getInstance();
     const queueChannel = await rabbitMqManager.createChannel(exchangeName);
