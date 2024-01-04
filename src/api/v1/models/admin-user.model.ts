@@ -35,6 +35,10 @@ const AdminUserSchema = new Schema(
         values: ["supervisor", "admin"]
       }
     },
+    status: {
+      type: String,
+      default: "ACTIVE"
+    },
     createdDate: {
       type: Number,
       default: Date.now,

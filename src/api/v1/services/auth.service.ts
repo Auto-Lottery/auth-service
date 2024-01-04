@@ -295,11 +295,11 @@ export class AuthService {
   async registerAdmin({
     phoneNumber,
     password,
-    role
+    roles
   }: {
     phoneNumber: string;
     password: string;
-    role?: string;
+    roles?: string[];
   }) {
     const res = checkPhonenumber(phoneNumber);
 
@@ -322,7 +322,7 @@ export class AuthService {
     await AdminUserModel.create({
       ...res.data,
       password: hp,
-      role: [role || "supervisor"]
+      roles: roles || ["supervisor"]
     });
 
     return {
@@ -355,6 +355,12 @@ export class AuthService {
       };
     }
 
+    if (foundUser.status === "BLOCKED") {
+      return {
+        code: 500,
+        message: "Таны эрх блоклогдсон байна."
+      };
+    }
     const validate = await bcrypt.compare(password, foundUser.password);
 
     if (!validate) {
@@ -369,6 +375,7 @@ export class AuthService {
       phoneNumber: foundUser.phoneNumber,
       roles: foundUser.roles,
       createdDate: foundUser.createdDate,
+      status: foundUser.status,
       _id: foundUser._id.toString()
     } as AdminUser);
 
@@ -380,6 +387,7 @@ export class AuthService {
         phoneNumber: foundUser.phoneNumber,
         roles: foundUser.roles,
         token: accessToken.token,
+        status: foundUser.status,
         exp:
           typeof accessToken.tokenData !== "string"
             ? accessToken.tokenData?.exp

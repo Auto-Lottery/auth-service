@@ -19,6 +19,7 @@ export type AdminUser = {
   operator: string;
   _id: string;
   roles: string[];
+  status: string;
 };
 
 export type AdminUserWithToken = {

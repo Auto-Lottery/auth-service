@@ -74,6 +74,29 @@ adminAuthRoutes.post(
   }
 );
 
+adminAuthRoutes.post(
+  "/adminUsers",
+  TokenService.verifyAdminAccessToken,
+  async (req, res) => {
+    const filter = req.body;
+    if (req?.user) {
+      try {
+        const adminService = new AdminService();
+        const adminRes = await adminService.getAdminUserList(filter);
+
+        return res.status(200).json({
+          code: 200,
+          data: adminRes
+        });
+      } catch (err) {
+        errorLog("GET ADMIN USER LIST::: ", err);
+        return res.status(500).json(err);
+      }
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+);
+
 adminAuthRoutes.get(
   "/allUsersPhoneNumber",
   TokenService.verifyAdminAccessToken,
